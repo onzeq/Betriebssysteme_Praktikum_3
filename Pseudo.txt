@@ -1,0 +1,116 @@
+Allgemeine Funktion:
+    Prozesse:
+        -Druckerspooler (1)
+            -besitzt eine warteschlange, größe 5
+                -entnimmt aufträge aus dieser und verteilt diese abwechselnd an einen Drucker
+            -beim senden an den Drucker:
+                falls beschäftigt: warten bis laufender druckauftrag fertig ist, dann senden
+
+
+        -Drucker (2)
+            -nehmen Druckaufträge von Druckerspooler entgegen
+            -Drucken diese
+            -warten auf nächsten Druckaufträge
+
+        -Anwendungen
+            -stellen druckaufträge in die Warteschlange des Druckerspoolers
+                -falls diese voll ist, wartet die Anwendung
+            Besonderheiten:
+                -jede Anwendung welche drucken will, besteht aus einem eigenen Prozess
+                -jede Anwendung starten einen druckauftrag, danach wird der Prozess beendet
+
+    Besonderheiten allgemein:
+        -anwendungen starten sich zeitlich gleichverteilt von 0 bis 4 sekunden
+            -danach kommt es SOFORT zu einem druckauftrag
+        -das Drucken dauert zufällig verteilt 2 bis 6 Sekunden
+
+
+Pseudocode der Prozesse:
+#########################################################
+#define LDSWarte  (5)
+
+semaphore LDSvoll(0);
+semaphore LDSleer(LDSWarte);
+semaphore LDSmutex(1);
+
+semaphore LD1voll(0);
+semaphore LD1leer(LDSWarte);
+semaphore LD1mutex(1);
+
+semaphore LD2voll(0);
+semaphore LD2leer(LDSWarte);
+semaphore LD2mutex(1);
+
+
+void Druckerspooler(){
+    
+    int Dokument;
+
+    while(true){
+        LDSvoll.wait(1);
+        LDSmutex.wait(1);
+        lese_aus_warteliste_spooler(&Dokument);
+        LDSmutex.signal(1);
+        LDSleer.signal(1);
+
+        abwechselnd(){
+            LD1leer.wait(1);
+            LD1mutex.wait(1);
+            fuege_Dokument_in_Druckerliste1_ein(Dokument);
+            LD1mutex.signal(1);
+            LD1voll.signal(1);
+        }
+        {
+            LD2leer.wait(1);
+            LD2mutex.wait(1);
+            fuege_Dokument_in_Druckerliste2_ein(Dokument);
+            LD2mutex.signal(1);
+            LD2voll.signal(1);
+        }
+    }
+}
+
+#########################################################
+#define LDwarte (1)
+
+semaphore LDvoll (0);
+semaphore LDleer(LDWarte);
+semaphore LDmutex(1);
+
+void Drucker(){
+    int Dokument;
+    
+    while(true){
+        LDvoll.wait(1);
+        LDmutex.wait(1);
+        lese_aus_warteliste_Drucker(&Dokument);
+        LDmutex.signal(1);
+        LDleer.signal(1);
+
+        drucke_Dokument(Dokument);
+    }
+
+}
+#########################################################
+
+#define LDSWarte  (5)
+
+semaphore LDSvoll(0);
+semaphore LDSleer(LDSWarte);
+semaphore LDSmutex(1);
+
+void anwendung(){
+    int Dokument;
+
+    erzeugeDokument(&Dokument);
+
+    LDSleer.wait(1);
+    LDSmutex.wait(1);
+
+    sende_Daten_an_Spooler();
+    
+    LDSmutex.signal(1);
+    LDSvoll.signal(1);
+}
+
+

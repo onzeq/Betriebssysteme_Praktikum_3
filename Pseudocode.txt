@@ -1,0 +1,17 @@
+Drucker1:
+Semaphor frei1 initialisieren
+Wenn frei1 voll dann drucken
+Nach drucken leer machen
+Drucker 2:
+Semaphor frei2 initialisieren
+Wenn frei2 voll dann drucken
+Nach drucken leer machen
+Druckerspooler:
+Auftragsschlange mit mutex Semaphor anlegen
+Die Semephoren von Drucker eins und zwei einlesen
+Wenn Aufgabe in Schlange weitergeben an leeren Drucker Semaphor
+Auftraggeber:
+Nach gewisser Zeit Druckaufträge erstellen
+Druckauftrag in Auftragsschlange einreihen
+Auftragsthread beenden
+
