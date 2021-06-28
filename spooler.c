@@ -36,15 +36,15 @@ int main(){
 
     unsigned int daten;
 
-    ps_semid = semget(SEMKEYSPOOLER, 3, IPC_CREAT | 0777);
+    ps_semid = semget(SEM_KEY_SPOOLER, 3, IPC_CREAT | 0777);
 
-    p1_semid = semget(SEMKEYDRUCKER1, 3, 0777);
+    p1_semid = semget(SEM_KEY_PRINTER1, 3, 0777);
     if (p1_semid == -1){
         printf("Fehler: Semaphorgruppe existiert nicht! (Drucker 1)");
         exit(-1);
     }
 
-    p2_semid = semget(SEMKEYDRUCKER2, 3, 0777);
+    p2_semid = semget(SEM_KEY_PRINTER2, 3, 0777);
     if (p2_semid == -1){
         printf("Fehler: Semaphorgruppe existiert nicht! (Drucker 2)");
         exit(-1);
@@ -52,7 +52,7 @@ int main(){
 
     /* Initialisierung der Semaphoren */
     init_array[VOLL] = 0;
-    init_array[LEER] = SPOOLERPUFFER;
+    init_array[LEER] = SPOOLER_BUFFER;
     init_array[MUTEX] = 1;
 
     semctl(ps_semid, 0, SETALL, init_array);
@@ -132,20 +132,20 @@ int main(){
     p2_mutex_v.sem_flg = 0;
 
 
-    ps_shmid = shmget(SHMKEYSPOOLER, (SEMKEYSPOOLER + 2) * sizeof(unsigned int), 0777 | IPC_CREAT);
+    ps_shmid = shmget(SHM_KEY_SPOOLER, (SEM_KEY_SPOOLER + 2) * sizeof(unsigned int), 0777 | IPC_CREAT);
 
-    p1_shmid = shmget(SHMKEYDRUCKER1, (DRUCKERPUFFER + 2) * sizeof(unsigned int), 0777);
-    p2_shmid = shmget(SHMKEYDRUCKER2, (DRUCKERPUFFER + 2) * sizeof(unsigned int), 0777);
+    p1_shmid = shmget(SHM_KEY_PRINTER1, (PRINTER_BUFFER + 2) * sizeof(unsigned int), 0777);
+    p2_shmid = shmget(SHM_KEY_PRINTER2, (PRINTER_BUFFER + 2) * sizeof(unsigned int), 0777);
 
     semop(p1_semid, &p1_mutex_p, 1);
     p1_buffer = (unsigned int *)shmat (p1_shmid, 0, 0);
-    p1_next_free = p1_buffer + DRUCKERPUFFER;
+    p1_next_free = p1_buffer + PRINTER_BUFFER;
     *p1_next_free = 0u;
     semop(p1_semid, &p1_mutex_v, 1);
 
     semop(p2_semid, &p2_mutex_p, 1);
     p2_buffer = (unsigned int *)shmat (p2_shmid, 0, 0);
-    p2_next_free = p2_buffer + DRUCKERPUFFER;
+    p2_next_free = p2_buffer + PRINTER_BUFFER;
     *p2_next_free = 0u;
     semop(p2_semid, &p2_mutex_v, 1);
 
@@ -153,7 +153,7 @@ int main(){
     ps_buffer = (unsigned int *)shmat (ps_shmid, 0, 0);
 
     semop(ps_semid, &ps_mutex_p, 1);
-    next_used = ps_buffer + SEMKEYSPOOLER + 1;
+    next_used = ps_buffer + SHM_KEY_SPOOLER + 1;
     *next_used = 0u;
     semop(ps_semid, &ps_mutex_v, 1);
 
@@ -162,7 +162,7 @@ int main(){
   
   /* Verbrauchsvorgaenge in der gewuenschten Anzahl */
 
-    for (count = 0; count < ANZAHLANWENDUNGEN; count++) {
+    for (count = 0; count < NUMBER_OF_APPLICATIONS; count++) {
 
         semop(ps_semid, &ps_full_p, 1);
 
@@ -173,7 +173,7 @@ int main(){
 
         daten = ps_buffer[(*next_used)++] ;
 
-        *next_used %= SPOOLERPUFFER;
+        *next_used %= SPOOLER_BUFFER;
 
         sleep((unsigned int)rand() % 2 + 1);
 
@@ -192,7 +192,7 @@ int main(){
             p1_buffer[(*p1_next_free)] = daten;
 
             *p1_next_free = *p1_next_free + 1;
-            *p1_next_free %= DRUCKERPUFFER;
+            *p1_next_free %= PRINTER_BUFFER;
 
             semop(p1_semid, &p1_mutex_v, 1);
             semop(p1_semid, &p1_full_v, 1);
@@ -206,7 +206,7 @@ int main(){
             p2_buffer[(*p2_next_free)] = daten;
 
             *p2_next_free = *p2_next_free + 1;
-            *p2_next_free %= DRUCKERPUFFER;
+            *p2_next_free %= PRINTER_BUFFER;
 
             semop(p2_semid, &p2_mutex_v, 1);
             semop(p2_semid, &p2_full_v, 1);

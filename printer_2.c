@@ -19,11 +19,11 @@ int main(){
 
     unsigned int data;
 
-    p_semid = semget(SEMKEYDRUCKER2, 3, IPC_CREAT | 0777);
+    p_semid = semget(SEM_KEY_PRINTER2, 3, IPC_CREAT | 0777);
 
     /* Initialisierung der Semaphoren */
     init_array[VOLL] = 0;
-    init_array[LEER] = DRUCKERPUFFER;
+    init_array[LEER] = PRINTER_BUFFER;
     init_array[MUTEX] = 1;
 
     semctl(p_semid, 0, SETALL, init_array);
@@ -52,17 +52,17 @@ int main(){
     p_mutex_p.sem_flg = 0;
     p_mutex_v.sem_flg = 0;
 
-    p_shmid = shmget(SHMKEYDRUCKER2, (SEMKEYDRUCKER2 + 2) * sizeof(unsigned int), 0777 | IPC_CREAT);
+    p_shmid = shmget(SHM_KEY_PRINTER2, (SEM_KEY_PRINTER2 + 2) * sizeof(unsigned int), 0777 | IPC_CREAT);
 
     p_buffer = (unsigned int *)shmat (p_shmid, 0, 0);
     semop(p_semid, &p_mutex_p, 1);
-    p_next_used = p_buffer + SEMKEYDRUCKER2 + 1;
+    p_next_used = p_buffer + SEM_KEY_PRINTER2 + 1;
     *p_next_used = 0u;
     semop(p_semid, &p_mutex_v, 1);
 
     srand((unsigned)time(NULL));
 
-    for (counter = 0; counter < ANZAHLANWENDUNGEN/2; counter++) {
+    for (counter = 0; counter < NUMBER_OF_APPLICATIONS/2; counter++) {
         semop(p_semid, &p_full_p, 1);
 
         semop(p_semid, &p_mutex_p, 1);
@@ -72,7 +72,7 @@ int main(){
 
         data = p_buffer[(*p_next_used)++] ;
 
-        *p_next_used %= DRUCKERPUFFER;
+        *p_next_used %= PRINTER_BUFFER;
 
         printf("Drucker 2 beginnt Drucken von: %d\n", data);
         sleep((unsigned int)rand() % 5 + 2);

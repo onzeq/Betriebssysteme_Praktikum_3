@@ -8,6 +8,7 @@ int main(){
 
     int app_semid; //Nummer der Semaphorengruppe
 
+    // Deklaration semaphoren
     struct sembuf app_full_p, app_full_v;
     struct sembuf app_empty_p, app_empty_v;
     struct sembuf app_mutex_p, app_mutex_v;
@@ -20,14 +21,14 @@ int main(){
 
     unsigned int data;
 
-    app_semid = semget(SEMKEYSPOOLER, 3, 0777);
+    app_semid = semget(SEM_KEY_SPOOLER, 3, 0777);
     
     if (app_semid == -1){
         printf("Fehler: Semaphorgruppe existiert nicht! (Anwendung)");
         exit(-1);
     }
 
-      /* voll: Vorbereitung der P- und V-Operationen */
+    //full semaphore: Konfiguration application wait (p) and signal (v) operations
     app_full_p.sem_num = VOLL;
     app_full_v.sem_num = VOLL;
     app_full_p.sem_op  = -1;
@@ -35,7 +36,7 @@ int main(){
     app_full_p.sem_flg = 0;
     app_full_v.sem_flg = 0;
 
-    /* leer: Vorbereitung der P- und V-Operationen */
+    // empty semaphore: Konfiguration application wait (p) and signal (v) operations
     app_empty_p.sem_num = LEER;
     app_empty_v.sem_num = LEER;
     app_empty_p.sem_op  = -1;
@@ -43,43 +44,45 @@ int main(){
     app_empty_p.sem_flg = 0;
     app_empty_v.sem_flg = 0;
     
-    /* mutex: Vorbereitung der P- und V-Operationen */
+    // mutex semaphore: Konfiguration application wait (p) and signal (v) operations
     app_mutex_p.sem_num = MUTEX;
     app_mutex_v.sem_num = MUTEX;
     app_mutex_p.sem_op  = -1;
     app_mutex_v.sem_op  = 1;
     app_mutex_p.sem_flg = 0;
     app_mutex_v.sem_flg = 0;
-        
-    app_shmid = shmget(SHMKEYSPOOLER, (SPOOLERPUFFER + 2) * sizeof(unsigned int), 0777);
+
+    //Zuweisung shared memory ID    
+    app_shmid = shmget(SHM_KEY_SPOOLER, (SPOOLER_BUFFER + 2) * sizeof(unsigned int), 0777);
 
     //inizialisierung des pointers
-    semop(app_semid, &app_mutex_p, 1);
+    semop(app_semid, &app_mutex_p, 1); // app_mutex_wait(1)
     unsigned int *tmp = (unsigned int *)shmat (app_shmid, 0, 0);
-    app_next_free = tmp + SPOOLERPUFFER;
+    app_next_free = tmp + SPOOLER_BUFFER;
     *app_next_free = 0u;
-    semop(app_semid, &app_mutex_v, 1);
+    semop(app_semid, &app_mutex_v, 1); // app_mutex_signal(1)
 
 
     //erzeugen der Anwendungen
-    srand((unsigned)time(NULL));
-    for (counter = 0; counter < ANZAHLANWENDUNGEN; counter++)
+    srand((unsigned)time(NULL)); // init seed für Zufallsgenerator
+    
+    for (counter = 0; counter < NUMBER_OF_APPLICATIONS; counter++)
     {
         if(fork() == 0){
-            printf("%dte Anwendung gestartet\n", counter);
+            printf("Started %d. application\n", counter);
             app_buffer = (unsigned int *)shmat (app_shmid, 0, 0);
-            app_next_free = app_buffer + SPOOLERPUFFER;
+            app_next_free = app_buffer + SPOOLER_BUFFER;
 
-            semop(app_semid, &app_empty_p, 1);
-            semop(app_semid, &app_mutex_p, 1);
+            semop(app_semid, &app_empty_p, 1); // app_empty_wait(1)
+            semop(app_semid, &app_mutex_p, 1); // app_mutex_wait(1)
 
             data = counter + 100;
-            printf("%dte Anwendung Schreibt Druckauftrag Nr. %d mit Index %d\n", counter, data, *app_next_free);
+            printf("Application Nr. %d writes commission Nr %d with index %d\n", counter, data, *app_next_free);
 
             app_buffer[(*app_next_free)] = data;
 
             *app_next_free = *app_next_free + 1;
-            *app_next_free %= SPOOLERPUFFER;
+            *app_next_free %= SPOOLER_BUFFER;
 
             semop(app_semid, &app_mutex_v, 1);
             semop(app_semid, &app_full_v, 1);
@@ -89,11 +92,11 @@ int main(){
         //sleep((unsigned int)rand() % 2);
     }
 
-    for (counter = 0; counter<ANZAHLANWENDUNGEN; counter++){
+    for (counter = 0; counter<NUMBER_OF_APPLICATIONS; counter++){
         wait(&app_status);
     }
 
-
+    // Freigabe Speicher
     shmdt(app_buffer);
 
     exit(0);

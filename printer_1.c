@@ -1,12 +1,12 @@
 #include "praktikum3.h"
 
 int main(){
-    int counter;                            /* Schleifenzaehler */
+    int counter;   //Schleifenzaehler
   
-    int p_semid;                        /* Nummer der Semaphorgruppe */
-    unsigned short init_array[3];     /* Anfangswerte der Semaphore */
+    int p_semid;                //Nummer der Semaphorengruppe
+    unsigned short init_array[3];     // Array für Anfangswerte Semaphoren
     
-    /* P- und V-Operationen */
+    // Deklaration semaphoren
     struct sembuf p_full_p, p_full_v;
     struct sembuf p_empty_p, p_empty_v;
     struct sembuf p_mutex_p, p_mutex_v;
@@ -19,16 +19,16 @@ int main(){
 
     unsigned int data;
 
-    p_semid = semget(SEMKEYDRUCKER1, 3, IPC_CREAT | 0777);
+    p_semid = semget(SEM_KEY_PRINTER1, 3, IPC_CREAT | 0777);
 
-    /* Initialisierung der Semaphoren */
+    // Initialisierung der Semaphoren 
     init_array[VOLL] = 0;
-    init_array[LEER] = DRUCKERPUFFER;
+    init_array[LEER] = PRINTER_BUFFER;
     init_array[MUTEX] = 1;
 
     semctl(p_semid, 0, SETALL, init_array);
 
-    /* voll: Vorbereitung der P- und V-Operationen */
+    //full semaphore: Konfiguration printer wait (p) and signal (v) operations
     p_full_p.sem_num = VOLL;
     p_full_v.sem_num = VOLL;
     p_full_p.sem_op  = -1;
@@ -36,7 +36,7 @@ int main(){
     p_full_p.sem_flg = 0;
     p_full_v.sem_flg = 0;
 
-    /* leer: Vorbereitung der P- und V-Operationen */
+    //empty semaphore: Konfiguration printer wait (p) and signal (v) operations
     p_empty_p.sem_num = LEER;
     p_empty_v.sem_num = LEER;
     p_empty_p.sem_op  = -1;
@@ -44,7 +44,7 @@ int main(){
     p_empty_p.sem_flg = 0;
     p_empty_v.sem_flg = 0;
     
-    /* mutex: Vorbereitung der P- und V-Operationen */
+    //mutex semaphore: Konfiguration printer wait (p) and signal (v) operations
     p_mutex_p.sem_num = MUTEX;
     p_mutex_v.sem_num = MUTEX;
     p_mutex_p.sem_op  = -1;
@@ -52,17 +52,18 @@ int main(){
     p_mutex_p.sem_flg = 0;
     p_mutex_v.sem_flg = 0;
 
-    p_shmid = shmget(SHMKEYDRUCKER1, (SEMKEYDRUCKER1 + 2) * sizeof(unsigned int), 0777 | IPC_CREAT);
+    //Zuweisung shared memory ID  
+    p_shmid = shmget(SHM_KEY_PRINTER1, (SEM_KEY_PRINTER1 + 2) * sizeof(unsigned int), 0777 | IPC_CREAT);
 
     p_buffer = (unsigned int *)shmat (p_shmid, 0, 0);
     semop(p_semid, &p_mutex_p, 1);
-    p_next_used = p_buffer + SEMKEYDRUCKER1 + 1;
+    p_next_used = p_buffer + SEM_KEY_PRINTER1 + 1;
     *p_next_used = 0u;
     semop(p_semid, &p_mutex_v, 1);
 
     srand((unsigned)time(NULL));
 
-    for (counter = 0; counter < ANZAHLANWENDUNGEN/2; counter++) {
+    for (counter = 0; counter < NUMBER_OF_APPLICATIONS/2; counter++) {
         semop(p_semid, &p_full_p, 1);
 
         semop(p_semid, &p_mutex_p, 1);
@@ -72,7 +73,7 @@ int main(){
 
         data = p_buffer[(*p_next_used)++] ;
 
-        *p_next_used %= DRUCKERPUFFER;
+        *p_next_used %= PRINTER_BUFFER;
 
         printf("Drucker 1 beginnt Drucken von: %d\n", data);
         sleep((unsigned int)rand() % 5 + 2);
