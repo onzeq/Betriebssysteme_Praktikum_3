@@ -27,87 +27,95 @@ Allgemeine Funktion:
 
 Pseudocode der Prozesse:
 #########################################################
-#define LDSWarte  (5)
+#define SPOOLER_SIZE  (5)  		#Groesse der Spoolerwarteschlange
 
-semaphore LDSvoll(0);
-semaphore LDSleer(LDSWarte);
-semaphore LDSmutex(1);
+#create semaphore spooler
+semaphore ds_full(0);
+semaphore ds_empty(SPOOLER_SIZE);
+semaphore ds_mutex(1);
 
-semaphore LD1voll(0);
-semaphore LD1leer(LDSWarte);
-semaphore LD1mutex(1);
+#create semaphore printer1
+semaphore p1_full(0);
+semaphore p1_empty(SPOOLER_SIZE;
+semaphore p1_mutex(1);
 
-semaphore LD2voll(0);
-semaphore LD2leer(LDSWarte);
-semaphore LD2mutex(1);
+#create semaphore printer2
+semaphore p2_full(0);
+semaphore p2_empty(SPOOLER_SIZE);
+semaphore p2_mutex(1);
 
 
 void Druckerspooler(){
     
-    int Dokument;
-
+    int doc;		#angelegtes Dokument
+    int alternate_count	
     while(true){
-        LDSvoll.wait(1);
-        LDSmutex.wait(1);
-        lese_aus_warteliste_spooler(&Dokument);
-        LDSmutex.signal(1);
-        LDSleer.signal(1);
+        ds_full.wait(1);
+        ds_mutex.wait(1);
+        read_spooler_waitlist(&doc);
+        ds_mutex.signal(1);
+        ds_empty.signal(1);
 
-        abwechselnd(){
-            LD1leer.wait(1);
-            LD1mutex.wait(1);
-            fuege_Dokument_in_Druckerliste1_ein(Dokument);
-            LD1mutex.signal(1);
-            LD1voll.signal(1);
-        }
+        
+        if(alternate_count % 2 == 0)
         {
-            LD2leer.wait(1);
-            LD2mutex.wait(1);
+            p1_empty.wait(1);
+            p1_mutex.wait(1);
+            fuege_Dokument_in_Druckerliste1_ein(doc);
+            p1_mutex.signal(1);
+            p1_full.signal(1);
+        }
+        else
+        {
+            p2_empty.wait(1);
+            p2_mutex.wait(1);
             fuege_Dokument_in_Druckerliste2_ein(Dokument);
-            LD2mutex.signal(1);
-            LD2voll.signal(1);
+            p2_mutex.signal(1);
+            p2_full.signal(1);
         }
     }
 }
 
 #########################################################
-#define LDwarte (1)
+#define PRINTER_WAIT (1)
 
-semaphore LDvoll (0);
-semaphore LDleer(LDWarte);
-semaphore LDmutex(1);
+semaphore p_full (0);
+semaphore p_empty(LDWarte);
+semaphore p_mutex(1);
 
-void Drucker(){
-    int Dokument;
+void drucker(){
+    int doc;
     
     while(true){
-        LDvoll.wait(1);
-        LDmutex.wait(1);
-        lese_aus_warteliste_Drucker(&Dokument);
-        LDmutex.signal(1);
-        LDleer.signal(1);
+        p_full.wait(1);
+        p_mutex.wait(1);
+        read_waitlist_printer(&Dokument);
+        print_document(doc);
+        delay(2,6) #Druckauftrag zwischen 2 und 6 Minuten
+        p_mutex.signal(1);
+        p_empty.signal(1);
 
-        drucke_Dokument(Dokument);
+        
     }
 
 }
 #########################################################
 
-#define LDSWarte  (5)
+#define SPOOLER_SIZE  (5)
 
-semaphore LDSvoll(0);
-semaphore LDSleer(LDSWarte);
-semaphore LDSmutex(1);
+semaphore ds_full(0);
+semaphore ds_empty(LDSWarte);
+semaphore ds_mutex(1);
 
 void anwendung(){
-    int Dokument;
+    int doc;
 
-    erzeugeDokument(&Dokument);
+    create_document(&doc);
 
     LDSleer.wait(1);
     LDSmutex.wait(1);
 
-    sende_Daten_an_Spooler();
+    send_data_spooler();
     
     LDSmutex.signal(1);
     LDSvoll.signal(1);
