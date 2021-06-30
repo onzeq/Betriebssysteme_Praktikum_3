@@ -44,6 +44,7 @@ int main(){
     p_empty_p.sem_flg = 0;
     p_empty_v.sem_flg = 0;
     
+    //this is a test
     //mutex semaphore: Konfiguration printer wait (p) and signal (v) operations
     p_mutex_p.sem_num = MUTEX;
     p_mutex_v.sem_num = MUTEX;
