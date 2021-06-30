@@ -7,13 +7,13 @@ int main(){
     int ps_semid, p1_semid, p2_semid;       /* Nummer der Semaphorgruppe */
     unsigned short init_array[3];     /* Anfangswerte der Semaphore */
     
-    /* P- und V-Operationen */
+    // Declaration of semaphores for full empty and mutex
     //Anwender
     struct sembuf ps_full_p, ps_full_v;
     struct sembuf ps_empty_p, ps_empty_v;
     struct sembuf ps_mutex_p, ps_mutex_v;
     int ps_shmid;
-    unsigned int *ps_buffer;
+    unsigned int *ps_buffer; //buffer for shared memory
     unsigned int *next_used;
 
     //Drucker 1
@@ -34,30 +34,30 @@ int main(){
 
 
 
-    unsigned int daten;
+    unsigned int data;
 
     ps_semid = semget(SEM_KEY_SPOOLER, 3, IPC_CREAT | 0777);
 
     p1_semid = semget(SEM_KEY_PRINTER1, 3, 0777);
     if (p1_semid == -1){
-        printf("Fehler: Semaphorgruppe existiert nicht! (Drucker 1)");
+        printf("ERROR semophore group does not exist (printer1)");
         exit(-1);
     }
 
     p2_semid = semget(SEM_KEY_PRINTER2, 3, 0777);
     if (p2_semid == -1){
-        printf("Fehler: Semaphorgruppe existiert nicht! (Drucker 2)");
+        printf("ERROR semophore group does not exist (printer2)");
         exit(-1);
     }
 
-    /* Initialisierung der Semaphoren */
+    //Initializing Semahores 
     init_array[VOLL] = 0;
     init_array[LEER] = SPOOLER_BUFFER;
     init_array[MUTEX] = 1;
 
-    semctl(ps_semid, 0, SETALL, init_array);
+    semctl(ps_semid, 0, SETALL, init_array); //activate all semaphores
 
-    /* voll: Vorbereitung der P- und V-Operationen */
+    // full semaphore: configuration application wait (p) and signal (v) operations
     ps_full_p.sem_num = VOLL;
     ps_full_v.sem_num = VOLL;
     ps_full_p.sem_op  = -1;
@@ -65,7 +65,7 @@ int main(){
     ps_full_p.sem_flg = 0;
     ps_full_v.sem_flg = 0;
 
-    /* leer: Vorbereitung der P- und V-Operationen */
+    // empty semaphore: configuration application wait (p) and signal (v) operations
     ps_empty_p.sem_num = LEER;
     ps_empty_v.sem_num = LEER;
     ps_empty_p.sem_op  = -1;
@@ -73,7 +73,7 @@ int main(){
     ps_empty_p.sem_flg = 0;
     ps_empty_v.sem_flg = 0;
     
-    /* mutex: Vorbereitung der P- und V-Operationen */
+    // mutex semaphore: configuration application wait (p) and signal (v) operations
     ps_mutex_p.sem_num = MUTEX;
     ps_mutex_v.sem_num = MUTEX;
     ps_mutex_p.sem_op  = -1;
@@ -81,8 +81,8 @@ int main(){
     ps_mutex_p.sem_flg = 0;
     ps_mutex_v.sem_flg = 0;
 
-    //***************DRUCKER 1*************
-    /* voll: Vorbereitung der P- und V-Operationen */
+    // PRINTER 1
+    // full semaphore: configuration application wait (p) and signal (v) operations
     p1_full_p.sem_num = VOLL;
     p1_full_v.sem_num = VOLL;
     p1_full_p.sem_op  = -1;
@@ -90,7 +90,7 @@ int main(){
     p1_full_p.sem_flg = 0;
     p1_full_v.sem_flg = 0;
 
-    /* leer: Vorbereitung der P- und V-Operationen */
+    // empty semaphore: configuration application wait (p) and signal (v) operations
     p1_empty_p.sem_num = LEER;
     p1_empty_v.sem_num = LEER;
     p1_empty_p.sem_op  = -1;
@@ -98,7 +98,7 @@ int main(){
     p1_empty_p.sem_flg = 0;
     p1_empty_v.sem_flg = 0;
     
-    /* mutex: Vorbereitung der P- und V-Operationen */
+    // mutex semaphore: configuration application wait (p) and signal (v) operations
     p1_mutex_p.sem_num = MUTEX;
     p1_mutex_v.sem_num = MUTEX;
     p1_mutex_p.sem_op  = -1;
@@ -106,8 +106,8 @@ int main(){
     p1_mutex_p.sem_flg = 0;
     p1_mutex_v.sem_flg = 0;
 
-    //***************DRUCKER 2*************
-    /* voll: Vorbereitung der P- und V-Operationen */
+    // PRINTER 2
+    // full semaphore: configuration application wait (p) and signal (v) operations
     p2_full_p.sem_num = VOLL;
     p2_full_v.sem_num = VOLL;
     p2_full_p.sem_op  = -1;
@@ -115,7 +115,7 @@ int main(){
     p2_full_p.sem_flg = 0;
     p2_full_v.sem_flg = 0;
 
-    /* leer: Vorbereitung der P- und V-Operationen */
+    // empty semaphore: configuration application wait (p) and signal (v) operations
     p2_empty_p.sem_num = LEER;
     p2_empty_v.sem_num = LEER;
     p2_empty_p.sem_op  = -1;
@@ -123,7 +123,7 @@ int main(){
     p2_empty_p.sem_flg = 0;
     p2_empty_v.sem_flg = 0;
     
-    /* mutex: Vorbereitung der P- und V-Operationen */
+    // mutex semaphore: configuration application wait (p) and signal (v) operations
     p2_mutex_p.sem_num = MUTEX;
     p2_mutex_v.sem_num = MUTEX;
     p2_mutex_p.sem_op  = -1;
@@ -132,6 +132,7 @@ int main(){
     p2_mutex_v.sem_flg = 0;
 
 
+    // Initialize shared memory spaces 
     ps_shmid = shmget(SHM_KEY_SPOOLER, (SEM_KEY_SPOOLER + 2) * sizeof(unsigned int), 0777 | IPC_CREAT);
 
     p1_shmid = shmget(SHM_KEY_PRINTER1, (PRINTER_BUFFER + 2) * sizeof(unsigned int), 0777);
@@ -160,20 +161,20 @@ int main(){
     srand((unsigned)time(NULL));
 
   
-  /* Verbrauchsvorgaenge in der gewuenschten Anzahl */
+  // consumption loop  
 
     for (count = 0; count < NUMBER_OF_APPLICATIONS; count++) {
 
-        semop(ps_semid, &ps_full_p, 1);
+        semop(ps_semid, &ps_full_p, 1); //ps_full_wait(1)
 
-        semop(ps_semid, &ps_mutex_p, 1);
+        semop(ps_semid, &ps_mutex_p, 1); //
         
-        /* Daten aus Puffer lesen */
-        printf("Spooler liest mit Index %d\n", *next_used);
+        //read data from buffer 
+        printf("Spooler reads with index %d\n", *next_used);
 
-        daten = ps_buffer[(*next_used)++] ;
+        data = ps_buffer[(*next_used)++] ;
 
-        *next_used %= SPOOLER_BUFFER;
+        *next_used %= SPOOLER_BUFFER; //sets to zero if variable reaches 5
 
         sleep((unsigned int)rand() % 2 + 1);
 
@@ -181,15 +182,15 @@ int main(){
         
         semop(ps_semid, &ps_empty_v, 1);
 
-        /* Daten verbrauchen */
+        // consume data
         
         if(count % 2){
             semop(p1_semid, &p1_empty_p, 1);
             semop(p1_semid, &p1_mutex_p, 1);
 
-            printf("Druckauftrag wird an Drucker 1 gesendet Daten: %d\n", daten);
+            printf("sends application data to printer 1: %d\n", data);
 
-            p1_buffer[(*p1_next_free)] = daten;
+            p1_buffer[(*p1_next_free)] = data;
 
             *p1_next_free = *p1_next_free + 1;
             *p1_next_free %= PRINTER_BUFFER;
@@ -201,9 +202,9 @@ int main(){
             semop(p2_semid, &p2_empty_p, 1);
             semop(p2_semid, &p2_mutex_p, 1);
 
-            printf("Druckauftrag wird an Drucker 2 gesendet Daten: %d\n", daten);
+            printf("sends application data to printer 2: %d\n", data);
 
-            p2_buffer[(*p2_next_free)] = daten;
+            p2_buffer[(*p2_next_free)] = data;
 
             *p2_next_free = *p2_next_free + 1;
             *p2_next_free %= PRINTER_BUFFER;
@@ -213,11 +214,11 @@ int main(){
         }
         
     }
-    semctl(ps_semid, 0, IPC_RMID,0);
+    semctl(ps_semid, 0, IPC_RMID,0); //removes semaphore 
 
     shmdt(ps_buffer);
 
-    shmctl(ps_shmid, IPC_RMID, NULL);
+    shmctl(ps_shmid, IPC_RMID, NULL); // remove shared memory
 
     exit(0);
 }

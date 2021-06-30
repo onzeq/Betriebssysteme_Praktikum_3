@@ -28,7 +28,7 @@ int main(){
         exit(-1);
     }
 
-    //full semaphore: Konfiguration application wait (p) and signal (v) operations
+    // full semaphore: configuration application wait (p) and signal (v) operations
     app_full_p.sem_num = VOLL;
     app_full_v.sem_num = VOLL;
     app_full_p.sem_op  = -1;
@@ -36,7 +36,7 @@ int main(){
     app_full_p.sem_flg = 0;
     app_full_v.sem_flg = 0;
 
-    // empty semaphore: Konfiguration application wait (p) and signal (v) operations
+    // empty semaphore: configuration application wait (p) and signal (v) operations
     app_empty_p.sem_num = LEER;
     app_empty_v.sem_num = LEER;
     app_empty_p.sem_op  = -1;
@@ -44,7 +44,7 @@ int main(){
     app_empty_p.sem_flg = 0;
     app_empty_v.sem_flg = 0;
     
-    // mutex semaphore: Konfiguration application wait (p) and signal (v) operations
+    // mutex semaphore: configuration application wait (p) and signal (v) operations
     app_mutex_p.sem_num = MUTEX;
     app_mutex_v.sem_num = MUTEX;
     app_mutex_p.sem_op  = -1;
@@ -63,8 +63,8 @@ int main(){
     semop(app_semid, &app_mutex_v, 1); // app_mutex_signal(1)
 
 
-    //erzeugen der Anwendungen
-    srand((unsigned)time(NULL)); // init seed für Zufallsgenerator
+    //create applications
+    srand((unsigned)time(NULL)); // init seed randomization generator
     
     for (counter = 0; counter < NUMBER_OF_APPLICATIONS; counter++)
     {
@@ -76,7 +76,7 @@ int main(){
             semop(app_semid, &app_empty_p, 1); // app_empty_wait(1)
             semop(app_semid, &app_mutex_p, 1); // app_mutex_wait(1)
 
-            data = counter + 100;
+            data = counter;
             printf("Application Nr. %d writes commission Nr %d with index %d\n", counter, data, *app_next_free);
 
             app_buffer[(*app_next_free)] = data;
