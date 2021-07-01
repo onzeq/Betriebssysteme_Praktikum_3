@@ -4,11 +4,11 @@ int main(){
 
     int counter; //Schleifenzaehler
 
-    int app_status;
+    int app_status; // status of died child process 
 
     int app_semid; //Nummer der Semaphorengruppe
 
-    // Deklaration semaphoren
+    // Declaration semaphoren
     struct sembuf app_full_p, app_full_v;
     struct sembuf app_empty_p, app_empty_v;
     struct sembuf app_mutex_p, app_mutex_v;
@@ -26,7 +26,7 @@ int main(){
     if (app_semid == -1){
         printf("Fehler: Semaphorgruppe existiert nicht! (Anwendung)");
         exit(-1);
-    }
+    } 
 
     // full semaphore: configuration application wait (p) and signal (v) operations
     app_full_p.sem_num = VOLL;

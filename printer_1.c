@@ -3,8 +3,8 @@
 int main(){
     int counter;   //Schleifenzaehler
   
-    int p_semid;                //Nummer der Semaphorengruppe
-    unsigned short init_array[3];     // Array für Anfangswerte Semaphoren
+    int p_semid;                //number of semaphore group
+    unsigned short init_array[3];     // array to initialize semaphore group
     
     // Deklaration semaphoren
     struct sembuf p_full_p, p_full_v;
@@ -69,27 +69,27 @@ int main(){
 
         semop(p_semid, &p_mutex_p, 1);
         
-        /* Daten aus Puffer lesen */
-        //printf("Drucker liest mit Index %d\n", *p_next_used);
+        /* //read data from buffer
+        printf("printer 1 reads with index: %d\n", *p_next_used); */
 
         data = p_buffer[(*p_next_used)++] ;
 
         *p_next_used %= PRINTER_BUFFER;
 
-        printf("Drucker 1 beginnt Drucken von: %d\n", data);
+        printf("printer 1 starts printing: %d\n", data);
         sleep((unsigned int)rand() % 5 + 2);
-        printf("Drucker 1 beendet Drucken von: %d\n\n", data);
+        printf("printer 1 finishes printing: %d\n\n", data);
 
         semop(p_semid, &p_mutex_v, 1);
         
         semop(p_semid, &p_empty_v, 1);    
     }
 
-    semctl(p_semid, 0, IPC_RMID,0);
+    semctl(p_semid, 0, IPC_RMID,0); // remove semaphore group
 
-    shmdt(p_buffer);
+    shmdt(p_buffer); // deactivate shared memory
 
-    shmctl(p_shmid, IPC_RMID, NULL);
+    shmctl(p_shmid, IPC_RMID, NULL); // remove shared memory segment
 
     exit(0);
 
