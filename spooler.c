@@ -8,7 +8,7 @@ int main(){
     unsigned short init_array[3];     /* Anfangswerte der Semaphore */
     
     // Declaration of semaphores for full empty and mutex
-    //Anwender
+    //spooler
     struct sembuf ps_full_p, ps_full_v;
     struct sembuf ps_empty_p, ps_empty_v;
     struct sembuf ps_mutex_p, ps_mutex_v;
@@ -16,7 +16,7 @@ int main(){
     unsigned int *ps_buffer; //buffer for shared memory
     unsigned int *next_used;
 
-    //Drucker 1
+    // printer_1
     struct sembuf p1_full_p, p1_full_v;
     struct sembuf p1_empty_p, p1_empty_v;
     struct sembuf p1_mutex_p, p1_mutex_v;
@@ -24,7 +24,7 @@ int main(){
     unsigned int *p1_buffer;
     unsigned int *p1_next_free;
     
-    //Drucker 2
+    // printer_2
     struct sembuf p2_full_p, p2_full_v;
     struct sembuf p2_empty_p, p2_empty_v;
     struct sembuf p2_mutex_p, p2_mutex_v;
@@ -167,7 +167,7 @@ int main(){
 
         semop(ps_semid, &ps_full_p, 1); //ps_full_wait(1)
 
-        semop(ps_semid, &ps_mutex_p, 1); //
+        semop(ps_semid, &ps_mutex_p, 1); //ps_mutex_wait(1)
         
         //read data from buffer 
         printf("Spooler reads with index %d\n", *next_used);
@@ -178,13 +178,13 @@ int main(){
 
         sleep((unsigned int)rand() % 2 + 1);
 
-        semop(ps_semid, &ps_mutex_v, 1);
+        semop(ps_semid, &ps_mutex_v, 1); //ps_mutex_signal(1)
         
-        semop(ps_semid, &ps_empty_v, 1);
+        semop(ps_semid, &ps_empty_v, 1); // ps_empty_singal(1)
 
         // consume data
         
-        if(count % 2){
+        if(count % 2 == 0){
             semop(p1_semid, &p1_empty_p, 1);
             semop(p1_semid, &p1_mutex_p, 1);
 
