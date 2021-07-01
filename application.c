@@ -6,7 +6,7 @@ int main(){
 
     int app_status; // status of died child process 
 
-    int app_semid; //Nummer der Semaphorengruppe
+    int app_semid; //ID semaphorgroup
 
     // Declaration semaphoren
     struct sembuf app_full_p, app_full_v;
@@ -24,7 +24,7 @@ int main(){
     app_semid = semget(SEM_KEY_SPOOLER, 3, 0777);
     
     if (app_semid == -1){
-        printf("Fehler: Semaphorgruppe existiert nicht! (Anwendung)");
+        printf("ERROR Semaphorgroup does not exist (Application)");
         exit(-1);
     } 
 
@@ -96,7 +96,7 @@ int main(){
         wait(&app_status);
     }
 
-    // Freigabe Speicher
+    // release memory
     shmdt(app_buffer);
 
     exit(0);

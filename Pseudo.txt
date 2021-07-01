@@ -1,42 +1,41 @@
-Allgemeine Funktion:
-    Prozesse:
-        -Druckerspooler (1)
-            -besitzt eine warteschlange, größe 5
-                -entnimmt aufträge aus dieser und verteilt diese abwechselnd an einen Drucker
-            -beim senden an den Drucker:
-                falls beschäftigt: warten bis laufender druckauftrag fertig ist, dann senden
+
+Prozesse:
+    -1x Spooler
+        -Warteschlange Größe 5
+        -entnimmt Aufträge verteilt an Drucker 1,2 abwechselnd
+        -beim senden an den Drucker:
+        -wenn Drucker beschäftigt, wartet Spooler bis Drucker fertig
 
 
-        -Drucker (2)
-            -nehmen Druckaufträge von Druckerspooler entgegen
-            -Drucken diese
-            -warten auf nächsten Druckaufträge
+    -2x Drucker 
+        -Nimmt Aufträge von Spooler
+        -Druckt Aufträge
+        -wartet auf nächsten Druckauftrag
 
-        -Anwendungen
-            -stellen druckaufträge in die Warteschlange des Druckerspoolers
-                -falls diese voll ist, wartet die Anwendung
-            Besonderheiten:
-                -jede Anwendung welche drucken will, besteht aus einem eigenen Prozess
-                -jede Anwendung starten einen druckauftrag, danach wird der Prozess beendet
+    -1x Anwendungen
+        -Generiert Druckaufträge (eigener Prozess) und stellt diese in Warteschlange bei Spooler
+        -wenn Warteschlange voll, dann warten
+        -jede Anwendung starten einen druckauftrag, danach wird der Prozess beendet
+   
 
     Besonderheiten allgemein:
-        -anwendungen starten sich zeitlich gleichverteilt von 0 bis 4 sekunden
-            -danach kommt es SOFORT zu einem druckauftrag
-        -das Drucken dauert zufällig verteilt 2 bis 6 Sekunden
+        -Zufallsgenerator ergibt Zeit zwischen 1 und 4 Sekunden für Druckauftrag Erzeugung
+        -danach kommt es SOFORT zu einem druckauftrag
+        -Zufallsgenerator erstellt Druckzeit zwischen 2 und 6 Sekunden
 
 
-Pseudocode der Prozesse:
+Pseudataode der Prozesse:
 #########################################################
 #define SPOOLER_SIZE  (5)  		#Groesse der Spoolerwarteschlange
 
 #create semaphore spooler
-semaphore ds_full(0);
-semaphore ds_empty(SPOOLER_SIZE);
-semaphore ds_mutex(1);
+semaphore ps_full(0);
+semaphore ps_empty(SPOOLER_SIZE);
+semaphore ps_mutex(1);
 
 #create semaphore printer1
 semaphore p1_full(0);
-semaphore p1_empty(SPOOLER_SIZE;
+semaphore p1_empty(SPOOLER_SIZE);
 semaphore p1_mutex(1);
 
 #create semaphore printer2
@@ -45,23 +44,25 @@ semaphore p2_empty(SPOOLER_SIZE);
 semaphore p2_mutex(1);
 
 
-void Druckerspooler(){
+void spooler(){
     
-    int doc;		#angelegtes Dokument
+    int data;		#angelegtes Dokument
     int alternate_count	
     while(true){
-        ds_full.wait(1);
-        ds_mutex.wait(1);
-        read_spooler_waitlist(&doc);
-        ds_mutex.signal(1);
-        ds_empty.signal(1);
 
-        
+        //Lese warteschlange
+        ps_full.wait(1);
+        ps_mutex.wait(1);
+        read_spooler_waitlist(&data);
+        ps_mutex.signal(1);
+        ps_empty.signal(1);
+
+        //Verteile Druckauftrag
         if(alternate_count % 2 == 0)
         {
             p1_empty.wait(1);
             p1_mutex.wait(1);
-            fuege_Dokument_in_Druckerliste1_ein(doc);
+            insert_data_printer_1_list(data);
             p1_mutex.signal(1);
             p1_full.signal(1);
         }
@@ -69,7 +70,7 @@ void Druckerspooler(){
         {
             p2_empty.wait(1);
             p2_mutex.wait(1);
-            fuege_Dokument_in_Druckerliste2_ein(Dokument);
+            insert_data_printer_2_list(data);
             p2_mutex.signal(1);
             p2_full.signal(1);
         }
@@ -80,17 +81,17 @@ void Druckerspooler(){
 #define PRINTER_WAIT (1)
 
 semaphore p_full (0);
-semaphore p_empty(LDWarte);
+semaphore p_empty(1);
 semaphore p_mutex(1);
 
 void drucker(){
-    int doc;
+    int data;
     
     while(true){
         p_full.wait(1);
         p_mutex.wait(1);
         read_waitlist_printer(&Dokument);
-        print_document(doc);
+        print_dataument(data);
         delay(2,6) #Druckauftrag zwischen 2 und 6 Minuten
         p_mutex.signal(1);
         p_empty.signal(1);
@@ -103,22 +104,22 @@ void drucker(){
 
 #define SPOOLER_SIZE  (5)
 
-semaphore ds_full(0);
-semaphore ds_empty(LDSWarte);
-semaphore ds_mutex(1);
+semaphore app_full(0);
+semaphore app_empty(1);
+semaphore app_mutex(1);
 
-void anwendung(){
-    int doc;
+void application(){
+    int data;
 
-    create_document(&doc);
+    create_data(&data);
 
-    LDSleer.wait(1);
-    LDSmutex.wait(1);
+    app_empty.wait(1);
+    app_mutex.wait(1);
 
     send_data_spooler();
     
-    LDSmutex.signal(1);
-    LDSvoll.signal(1);
+    app_mutex.signal(1);
+    app_full.signal(1);
 }
 
 
